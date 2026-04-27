@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#1a8c6e"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="SmartHealth"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>Smart Health Assistance</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f7f4;--sur:#ffffff;--sur2:#e8f5ef;--sur3:#d4eddf;
+  --bor:rgba(26,140,110,0.15);--borh:rgba(26,140,110,0.35);
+  --t:#0d2b1f;--t2:#3d6b58;--t3:#7aaa93;
+  --gr:#1a8c6e;--grl:#e8f5ef;--grd:#0d5c47;--grxl:rgba(26,140,110,0.08);
+  --teal:#0891b2;--teall:rgba(8,145,178,0.1);
+  --mint:#34d399;--mintl:rgba(52,211,153,0.12);
+  --am:#f59e0b;--al:rgba(245,158,11,0.12);--ad:#92400e;
+  --re:#ef4444;--rl:rgba(239,68,68,0.1);--rd:#7f1d1d;
+  --pu:#8b5cf6;--pul:rgba(139,92,246,0.1);
+  --tg:#229ED9;--tgl:rgba(34,158,217,0.1);
+  --blu:#3b82f6;
+  --r6:6px;--r10:10px;--r14:14px;--r20:20px;--r24:24px;
+  --sh:0 1px 3px rgba(26,140,110,0.06),0 4px 16px rgba(26,140,110,0.08);
+  --sh2:0 4px 12px rgba(26,140,110,0.1),0 16px 40px rgba(26,140,110,0.12);
+  --shc:0 2px 8px rgba(0,0,0,0.06),0 8px 24px rgba(0,0,0,0.06);
+}
+
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ════ LOGIN ════ */
+#loginScreen{position:fixed;inset:0;z-index:1000;background:linear-gradient(145deg,#0d2b1f 0%,#1a4a35 40%,#0f3d2e 70%,#0a2218 100%);display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden}
+#loginScreen::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2334d399' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+.l-hero{display:flex;flex-direction:column;align-items:center;margin-bottom:24px}
+.l-logo-wrap{position:relative;margin-bottom:16px}
+.l-logo-bg{width:80px;height:80px;border-radius:22px;background:linear-gradient(135deg,#34d399,#1a8c6e);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(52,211,153,0.4),0 0 0 8px rgba(52,211,153,0.1)}
+.l-logo-bg svg{width:44px;height:44px;fill:#fff}
+.l-pulse{position:absolute;inset:-6px;border-radius:28px;border:2px solid rgba(52,211,153,0.3);animation:lpulse 2s infinite}
+@keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.05)}}
+.l-title{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.l-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px;text-align:center}
+.l-tagline{display:flex;align-items:center;gap:6px;margin-top:10px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:20px;padding:5px 12px;font-size:11px;color:#34d399;font-weight:600}
+.lcard{width:100%;max-width:400px;background:rgba(255,255,255,0.04);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r24);padding:28px 26px;box-shadow:0 24px 80px rgba(0,0,0,0.4)}
+.ltabs{display:flex;background:rgba(255,255,255,0.06);border-radius:var(--r10);padding:3px;margin-bottom:18px}
+.ltab{flex:1;padding:9px;font-size:13px;font-weight:700;border:none;background:transparent;color:rgba(255,255,255,0.4);border-radius:8px;cursor:pointer;transition:all .15s}
+.ltab.active{background:linear-gradient(135deg,rgba(52,211,153,0.2),rgba(26,140,110,0.2));color:#34d399;border:1px solid rgba(52,211,153,0.2)}
+.lerr{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);color:#fca5a5;border-radius:var(--r6);padding:9px 12px;font-size:12px;font-weight:600;margin-bottom:11px;display:none}
+.lok{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.25);color:#34d399;border-radius:var(--r6);padding:9px 12px;font-size:12px;font-weight:600;margin-bottom:11px;display:none}
+.linput{width:100%;padding:11px 13px;font-size:14px;font-weight:500;border:1px solid rgba(255,255,255,0.1);border-radius:var(--r10);background:rgba(255,255,255,0.06);color:#fff;outline:none;margin-bottom:12px;font-family:inherit;transition:all .15s}
+.linput:focus{border-color:rgba(52,211,153,0.5);background:rgba(255,255,255,0.09);box-shadow:0 0 0 3px rgba(52,211,153,0.12)}
+.linput::placeholder{color:rgba(255,255,255,0.25)}
+.llabel{font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;font-weight:500}
+.lbtn{width:100%;padding:13px;border-radius:var(--r10);font-size:14px;font-weight:800;cursor:pointer;border:none;background:linear-gradient(135deg,#34d399,#1a8c6e);color:#fff;margin-bottom:10px;font-family:inherit;transition:all .18s;box-shadow:0 4px 20px rgba(52,211,153,0.35),0 1px 3px rgba(0,0,0,0.2)}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(52,211,153,0.45)}
+.lbtn:active{transform:scale(.98)}
+.l-features{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.l-feat{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r10);padding:10px 8px;text-align:center}
+.l-feat-ic{font-size:20px;display:block;margin-bottom:4px}
+.l-feat-t{font-size:10px;color:rgba(255,255,255,0.45);font-weight:500;line-height:1.3}
+
+/* ════ SHELL ════ */
+.shell{max-width:700px;margin:0 auto;padding:0 14px 100px}
+
+/* ════ TOPBAR ════ */
+.topbar{position:sticky;top:0;z-index:200;background:rgba(240,247,244,0.92);backdrop-filter:blur(16px);padding:env(safe-area-inset-top,0) 0 0;border-bottom:1px solid var(--bor);margin-bottom:18px}
+.topbar-inner{display:flex;align-items:center;gap:11px;padding:11px 0 10px}
+.logo{width:36px;height:36px;border-radius:var(--r10);background:linear-gradient(135deg,var(--gr),var(--grd));display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(26,140,110,0.3)}
+.logo svg{width:20px;height:20px;fill:#fff}
+.topbar-t{flex:1}.topbar-t h1{font-size:15px;font-weight:800;color:var(--t)}.topbar-t p{font-size:11px;color:var(--t2)}
+.topbar-r{display:flex;align-items:center;gap:6px}
+#clock{font-size:11px;font-weight:700;color:var(--t2);font-variant-numeric:tabular-nums;background:var(--sur2);padding:4px 9px;border-radius:20px;border:1px solid var(--bor)}
+.icon-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--bor);background:var(--sur);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.icon-btn:hover{background:var(--sur2)}.icon-btn svg{width:14px;height:14px;fill:var(--t2)}
+.icon-btn.on svg{fill:var(--gr)}
+.ubadge{display:inline-flex;align-items:center;gap:5px;background:var(--sur2);border:1px solid var(--bor);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;color:var(--t)}
+.uav{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--gr),var(--grd));display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:800;flex-shrink:0}
+
+/* ════ SOS FAB ════ */
+#sos{position:fixed;bottom:88px;right:14px;z-index:300;width:56px;height:56px;border-radius:50%;border:none;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;font-size:9px;font-weight:900;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 4px 18px rgba(239,68,68,0.5);animation:sosp 2.5s infinite}
+@keyframes sosp{0%,100%{box-shadow:0 4px 18px rgba(239,68,68,.5),0 0 0 0 rgba(239,68,68,.25)}60%{box-shadow:0 4px 18px rgba(239,68,68,.5),0 0 0 10px rgba(239,68,68,0)}}
+#sos svg{width:18px;height:18px;fill:#fff}
+
+/* ════ TABS ════ */
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;background:var(--sur2);padding:3px;border-radius:var(--r10);margin-bottom:18px;border:1px solid var(--bor)}
+.tab{padding:7px 2px;font-size:10px;font-weight:500;border:none;background:transparent;color:var(--t3);border-radius:7px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabi{font-size:14px;line-height:1}
+.tab.active{background:var(--sur);color:var(--gr);font-weight:800;box-shadow:var(--sh)}
+.panel{display:none;animation:fi .2s ease}.panel.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+/* ════ HERO BANNER ════ */
+.hero-banner{background:linear-gradient(135deg,var(--grd) 0%,var(--gr) 50%,#0891b2 100%);border-radius:var(--r20);padding:20px 18px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:var(--sh2)}
+.hero-banner::before{content:'';position:absolute;top:-20px;right:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06)}
+.hero-banner::after{content:'';position:absolute;bottom:-30px;left:20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.04)}
+.hero-text{position:relative;z-index:1}
+.hero-text h2{font-size:18px;font-weight:800;color:#fff;line-height:1.2}
+.hero-text p{font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;line-height:1.5}
+.hero-pills{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.hero-pill{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:#fff;backdrop-filter:blur(4px)}
+.hero-icon{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:52px;opacity:0.18;z-index:0}
+
+/* ════ STATS ════ */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+.stat-card{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r14);padding:13px;text-align:center;box-shadow:var(--sh);position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.stat-card.sc-total::before{background:linear-gradient(90deg,var(--gr),var(--teal))}
+.stat-card.sc-taken::before{background:linear-gradient(90deg,var(--mint),var(--gr))}
+.stat-card.sc-missed::before{background:linear-gradient(90deg,var(--re),var(--am))}
+.sn{font-size:26px;font-weight:800;line-height:1}.sl{font-size:10px;color:var(--t2);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.s-ic{font-size:18px;margin-bottom:4px;display:block}
+
+/* ════ GENERIC CARD ════ */
+.card{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r20);padding:16px 18px;margin-bottom:12px;box-shadow:var(--sh)}
+.ctitle{font-size:14px;font-weight:800;margin-bottom:13px;color:var(--t)}
+.divider{height:1px;background:var(--bor);margin:13px 0}
+.slabel{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+
+/* ════ PATIENT CARDS ════ */
+.p-card{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r20);padding:14px 16px;margin-bottom:10px;box-shadow:var(--sh);transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
+.p-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;background:linear-gradient(180deg,var(--gr),var(--mint))}
+.p-card:hover{transform:translateY(-1px);box-shadow:var(--sh2)}
+.p-top{display:flex;align-items:center;gap:12px}
+.p-av{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2.5px solid var(--grl);flex-shrink:0;box-shadow:0 2px 8px rgba(26,140,110,0.15)}
+.p-avi{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gr),var(--teal));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;box-shadow:0 2px 8px rgba(26,140,110,0.2)}
+.p-inf{flex:1;min-width:0}.p-nm{font-size:15px;font-weight:800;color:var(--t)}.p-sub{font-size:11px;color:var(--t2);margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.p-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bor)}
+.pbadge{background:var(--grl);border:1px solid rgba(26,140,110,0.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;color:var(--grd)}
+.pdot{width:5px;height:5px;border-radius:50%;background:var(--gr);flex-shrink:0}
+.chip{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.cg{background:var(--mintl);color:var(--grd);border:1px solid rgba(52,211,153,0.3)}
+.ca{background:var(--al);color:var(--ad);border:1px solid rgba(245,158,11,0.25)}
+.cr{background:var(--rl);color:var(--rd);border:1px solid rgba(239,68,68,0.2)}
+.p-acts{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
+
+/* ════ REMINDER BANNER ════ */
+.rem-card{border-radius:var(--r20);padding:16px 18px;margin-bottom:16px;background:linear-gradient(135deg,#fff9e6,#fffbf0);border:2px solid var(--am);box-shadow:0 4px 20px rgba(245,158,11,0.15)}
+.rem-head{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.rem-head h3{font-size:14px;font-weight:800;color:var(--ad)}
+.pr{width:10px;height:10px;border-radius:50%;background:var(--am);animation:pr 1.2s infinite;flex-shrink:0}
+@keyframes pr{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.7);opacity:.4}}
+
+/* ════ FORMS ════ */
+label{font-size:13px;color:var(--t2);display:block;margin-bottom:4px;font-weight:500}
+input[type=text],input[type=tel],input[type=time],input[type=number],input[type=password],select{width:100%;padding:10px 13px;font-size:14px;font-weight:500;border:1px solid var(--bor);border-radius:var(--r10);background:var(--sur2);color:var(--t);outline:none;margin-bottom:13px;font-family:inherit;transition:all .15s}
+input:focus,select:focus{border-color:var(--gr);background:var(--sur);box-shadow:0 0 0 3px rgba(26,140,110,0.1)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.hint{font-size:11px;color:var(--t3);margin-top:-10px;margin-bottom:12px;line-height:1.4}
+
+/* ════ BUTTONS ════ */
+.btn{padding:10px 17px;border-radius:var(--r10);font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--bor);background:var(--sur2);color:var(--t);transition:all .15s;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.btn:active{transform:scale(.97)}
+.bg{background:linear-gradient(135deg,var(--gr),var(--grd));color:#fff;border-color:var(--gr);box-shadow:0 2px 8px rgba(26,140,110,0.25)}.bg:hover{filter:brightness(1.07)}
+.br{background:linear-gradient(135deg,var(--re),#b91c1c);color:#fff;border-color:var(--re)}.br:hover{filter:brightness(1.07)}
+.bam{background:linear-gradient(135deg,var(--am),#d97706);color:#fff;border-color:var(--am)}
+.btg{background:linear-gradient(135deg,var(--tg),#0369a1);color:#fff;border-color:var(--tg)}
+.bteal{background:linear-gradient(135deg,var(--teal),#0369a1);color:#fff;border-color:var(--teal)}
+.bsm{padding:6px 12px;font-size:12px;border-radius:var(--r6)}
+.brow{display:flex;gap:8px;flex-wrap:wrap}
+.bgh{background:transparent;border-color:transparent;color:var(--t2)}.bgh:hover{background:var(--sur2)}
+
+/* ════ FACE UPLOAD ════ */
+.fu{border:2px dashed rgba(26,140,110,0.3);border-radius:var(--r14);padding:22px;text-align:center;cursor:pointer;background:var(--grl);position:relative;transition:all .15s;margin-bottom:13px}
+.fu:hover{border-color:var(--gr);background:var(--sur2)}
+.fu input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;margin:0;padding:0;border:none}
+.fp{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto;display:block;border:3px solid var(--gr);box-shadow:0 0 0 5px var(--grl)}
+
+/* ════ MED SLOTS ════ */
+.ms{display:flex;align-items:center;gap:7px;background:var(--sur2);border:1px solid var(--bor);border-radius:var(--r10);padding:8px 11px;margin-bottom:8px}
+.ms input{margin:0;flex:1;background:transparent;border:none;padding:4px 6px}
+.ms input:focus{box-shadow:none;border:none}
+.ms input[type=time]{flex:0 0 108px}
+.mrm{background:none;border:none;color:var(--t3);font-size:19px;cursor:pointer;padding:2px 4px;line-height:1;transition:color .15s}.mrm:hover{color:var(--re)}
+
+/* ════ CAMERA ════ */
+.cam-outer{position:relative;width:100%;border-radius:var(--r14);overflow:hidden;background:#0d2b1f;border:2px solid var(--bor)}
+.cam-outer video,.cam-outer canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cam-outer video{object-fit:cover;transform:scaleX(-1)}
+.cam-outer canvas{transform:scaleX(-1);pointer-events:none}
+.cam-lbl{position:absolute;bottom:0;left:0;right:0;background:rgba(13,43,31,.8);color:#fff;font-size:12px;font-weight:700;text-align:center;padding:10px;z-index:3;backdrop-filter:blur(4px);border-top:1px solid rgba(255,255,255,0.1)}
+.cam-lbl.lg{background:rgba(26,140,110,.9)!important}.cam-lbl.lr{background:rgba(185,28,28,.85)!important}.cam-lbl.la{background:rgba(180,120,0,.85)!important}
+.hand-indicator{position:absolute;top:10px;right:10px;z-index:4;background:rgba(13,43,31,.8);backdrop-filter:blur(6px);border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#fff;border:1px solid rgba(255,255,255,0.15)}
+.hand-dot{width:7px;height:7px;border-radius:50%}
+.hand-dot.detected{background:#34d399}.hand-dot.searching{background:var(--am);animation:pr 1s infinite}
+
+/* ════ GESTURE PANEL ════ */
+.gest-guide{background:var(--sur2);border:1px solid var(--bor);border-radius:var(--r14);padding:13px;margin-top:10px}
+.gest-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.gest-item{border-radius:var(--r10);padding:9px 4px;text-align:center;border:2px solid var(--bor);background:var(--sur);transition:all .2s;cursor:default}
+.gest-item.active{border-color:var(--gr);background:var(--grl);transform:scale(1.06);box-shadow:0 4px 12px rgba(26,140,110,0.2)}
+.gest-item.detecting{border-color:var(--teal);background:var(--teall)}
+.gest-emoji{font-size:22px;display:block;margin-bottom:3px}
+.gest-lbl{font-size:9px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em}
+
+/* ════ CONF BAR ════ */
+.conf-row{display:flex;align-items:center;gap:7px;margin-top:6px}
+.conf-bar{flex:1;height:5px;border-radius:3px;background:var(--sur3);overflow:hidden}
+.conf-fill{height:100%;border-radius:3px;transition:width .3s ease,background .3s}
+
+/* ════ AI BOX ════ */
+.ai-box{border-radius:var(--r14);padding:13px;background:var(--sur2);border:1.5px solid var(--bor);display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:center;min-height:130px}
+.ai-ic{font-size:28px}.ai-ttl{font-size:12px;font-weight:800;text-align:center;color:var(--t)}.ai-dsc{font-size:11px;color:var(--t2);text-align:center;line-height:1.4}
+
+/* ════ ACCURACY TIPS ════ */
+.tips-bar{background:linear-gradient(135deg,var(--teall),var(--mintl));border:1px solid rgba(8,145,178,0.15);border-radius:var(--r10);padding:11px 13px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.tip-item{display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--t2)}
+.tip-check{color:var(--gr);font-weight:700;flex-shrink:0}
+
+/* ════ TIMER ════ */
+.timer-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;margin:8px 0}
+
+/* ════ VOICE BAR ════ */
+.voice-bar{display:flex;align-items:center;gap:9px;background:var(--grl);border:1px solid rgba(26,140,110,0.2);border-radius:var(--r10);padding:9px 13px;margin-bottom:11px;font-size:12px;color:var(--grd);font-weight:600}
+.waves{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.wv{width:3px;border-radius:2px;background:var(--gr)}
+.wv:nth-child(1){height:7px;animation:wv 1s infinite 0s}.wv:nth-child(2){height:13px;animation:wv 1s infinite .15s}.wv:nth-child(3){height:9px;animation:wv 1s infinite .3s}.wv:nth-child(4){height:15px;animation:wv 1s infinite .45s}.wv:nth-child(5){height:7px;animation:wv 1s infinite .6s}
+@keyframes wv{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.35)}}
+
+/* ════ SUCCESS FLASH ════ */
+.success-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(26,140,110,0.25);backdrop-filter:blur(4px);z-index:5;border-radius:var(--r14)}
+.sf-inner{text-align:center;animation:sfIn .3s ease}
+@keyframes sfIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ════ RESULT BOXES ════ */
+.vr-box{padding:11px 13px;border-radius:var(--r10);font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;margin-top:10px}
+.vrok{background:var(--mintl);color:var(--grd);border:1px solid rgba(52,211,153,0.3)}
+.vrfl{background:var(--rl);color:var(--rd);border:1px solid rgba(239,68,68,0.2)}
+.vrwn{background:var(--al);color:var(--ad);border:1px solid rgba(245,158,11,0.2)}
+
+/* ════ SCAN MODAL ════ */
+#scanModal{display:none;position:fixed;inset:0;z-index:600;background:rgba(13,43,31,.8);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:10px}
+#scanModal.open{display:flex}
+#scanInner{background:var(--sur);border-radius:var(--r24);width:100%;max-width:580px;max-height:96vh;overflow-y:auto;padding:18px;box-shadow:0 24px 80px rgba(0,0,0,0.25)}
+
+/* ════ AUTH CONFIRM MODAL ════ */
+#authModal{display:none;position:fixed;inset:0;z-index:700;background:rgba(13,43,31,.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px}
+#authModal.open{display:flex}
+#authInner{background:var(--sur);border-radius:var(--r24);width:100%;max-width:380px;padding:28px 26px;box-shadow:0 24px 80px rgba(0,0,0,0.25)}
+.auth-ic{font-size:36px;text-align:center;margin-bottom:10px}
+.auth-title{font-size:16px;font-weight:800;text-align:center;color:var(--t);margin-bottom:4px}
+.auth-sub{font-size:12px;color:var(--t2);text-align:center;margin-bottom:18px;line-height:1.5}
+
+/* ════ EDIT DRAWER ════ */
+#editModal{display:none;position:fixed;inset:0;z-index:650;background:rgba(13,43,31,.75);backdrop-filter:blur(10px);align-items:flex-end;justify-content:center}
+#editModal.open{display:flex}
+@media(min-width:520px){#editModal{align-items:center}}
+#editInner{background:var(--sur);border-radius:var(--r24) var(--r24) 0 0;padding:22px 20px calc(env(safe-area-inset-bottom,0px)+22px);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.15)}
+@media(min-width:520px){#editInner{border-radius:var(--r24)}}
+
+/* ════ TG SETUP ════ */
+.tg-setup{background:linear-gradient(135deg,var(--tgl),rgba(34,158,217,0.02));border:1.5px solid rgba(34,158,217,0.3);border-radius:var(--r14);padding:14px 16px;margin-bottom:13px}
+.tg-setup h4{font-size:13px;font-weight:800;color:var(--tg);margin-bottom:5px}
+.tgb{display:inline-flex;align-items:center;gap:4px;background:var(--tgl);color:var(--tg);padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid rgba(34,158,217,0.2)}
+
+/* ════ PATIENTS LIST TAB ════ */
+.patients-list-item{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r14);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:11px;box-shadow:var(--sh);transition:all .15s}
+.patients-list-item:hover{border-color:var(--borh);box-shadow:var(--sh2)}
+.pli-info{flex:1;min-width:0}
+.pli-name{font-size:14px;font-weight:800;color:var(--t)}
+.pli-sub{font-size:11px;color:var(--t2);margin-top:2px}
+.pli-acts{display:flex;gap:6px;flex-shrink:0}
+
+/* ════ LOG ════ */
+.al-card{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r14);padding:11px 13px;margin-bottom:7px;display:flex;align-items:flex-start;gap:11px;box-shadow:var(--sh)}
+.al-ic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.aig{background:var(--mintl)}.air{background:var(--rl)}.aia{background:var(--al)}
+.al-bd{flex:1;min-width:0}.al-bd strong{font-size:13px;font-weight:800;color:var(--t)}.al-bd p{font-size:11px;color:var(--t2);margin-top:1px}
+.al-meta{font-size:10px;color:var(--t3);margin-top:3px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.al-mth{background:var(--sur2);border:1px solid var(--bor);padding:1px 6px;border-radius:20px;font-size:10px;font-weight:600}
+
+/* ════ SETTINGS ════ */
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--bor)}
+.set-row:last-child{border:none}
+.set-info h4{font-size:13px;font-weight:700;color:var(--t)}.set-info p{font-size:12px;color:var(--t2);margin-top:2px}
+
+/* ════ INSTALL ════ */
+.inst-banner{background:linear-gradient(135deg,var(--pul),rgba(139,92,246,0.02));border:1.5px solid rgba(139,92,246,0.25);border-radius:var(--r14);padding:13px 15px;margin-bottom:14px;display:flex;align-items:center;gap:11px}
+
+/* ════ GENERIC MODAL ════ */
+#modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(13,43,31,.65);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
+#modal.open{display:flex}
+@media(min-width:520px){#modal{align-items:center}}
+#modal-in{background:var(--sur);border-radius:var(--r20) var(--r20) 0 0;padding:22px 20px calc(env(safe-area-inset-bottom,0px)+22px);width:100%;max-width:480px;max-height:88vh;overflow-y:auto;box-shadow:var(--sh2)}
+@media(min-width:520px){#modal-in{border-radius:var(--r20)}}
+
+/* ════ EMPTY ════ */
+.empty{text-align:center;padding:36px 14px;color:var(--t2)}.empty-ic{font-size:44px;margin-bottom:9px;display:block;opacity:.4}
+
+/* ════ HEALTHCARE ICON STRIPS ════ */
+.hc-strip{display:flex;align-items:center;gap:10px;padding:11px 14px;background:linear-gradient(135deg,var(--sur2),var(--grl));border:1px solid var(--bor);border-radius:var(--r14);margin-bottom:12px}
+.hc-icon{font-size:22px;flex-shrink:0}
+.hc-text{flex:1;font-size:12px;color:var(--t2);line-height:1.45}
+.hc-text strong{color:var(--t);font-weight:700}
+
+/* ════ TOAST ════ */
+#toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--grd);color:#fff;padding:10px 18px;border-radius:22px;font-size:13px;font-weight:600;transition:transform .3s cubic-bezier(.34,1.56,.64,1);z-index:9999;white-space:nowrap;max-width:92vw;text-align:center;box-shadow:0 4px 16px rgba(13,92,71,0.35)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:480px){
+  .tabs{position:fixed;bottom:0;left:0;right:0;border-radius:0;margin:0;padding:5px 6px calc(env(safe-area-inset-bottom,0px)+5px);border-top:1px solid var(--bor);z-index:200;background:var(--bg)}
+  .shell{padding-bottom:80px}#sos{bottom:76px}#toast{bottom:78px}
+  .tips-bar{grid-template-columns:1fr}
+  .hero-icon{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN SCREEN ════ -->
+<div id="loginScreen">
+  <div style="width:100%;max-width:400px;z-index:1">
+    <div class="l-hero">
+      <div class="l-logo-wrap">
+        <div class="l-logo-bg">
+          <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/></svg>
+        </div>
+        <div class="l-pulse"></div>
+      </div>
+      <div class="ltitle">Smart Health</div>
+      <div class="lsub">Medication assistant for amnesia patients</div>
+      <div class="l-tagline">🏥 AI-Powered · 👁️ Vision Verified · ✈️ Auto-Alerts</div>
+    </div>
+    <div class="lcard">
+      <div class="ltabs">
+        <button class="ltab active" onclick="setMode('login')">Sign in</button>
+        <button class="ltab" onclick="setMode('register')">Register</button>
+      </div>
+      <div class="lerr" id="lErr"></div>
+      <div class="lok" id="lOk"></div>
+      <span class="llabel">Username</span>
+      <input class="linput" type="text" id="lUser" placeholder="Enter your username" autocomplete="username"/>
+      <span class="llabel">Password</span>
+      <input class="linput" type="password" id="lPass" placeholder="Enter your password" style="margin-bottom:16px" autocomplete="current-password"/>
+      <button class="lbtn" id="lBtn" onclick="doLogin()">Sign in</button>
+      <div class="l-features">
+        <div class="l-feat"><span class="l-feat-ic">🔒</span><span class="l-feat-t">Secure per-user data</span></div>
+        <div class="l-feat"><span class="l-feat-ic">🤖</span><span class="l-feat-t">AI pill detection</span></div>
+        <div class="l-feat"><span class="l-feat-ic">✈️</span><span class="l-feat-t">Auto Telegram alerts</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MAIN APP ════ -->
+<div id="appShell" style="display:none">
+<button id="sos" onclick="triggerSOS()"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>SOS</button>
+
+<div class="shell">
+<!-- topbar -->
+<div class="topbar"><div class="topbar-inner">
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2zm0 12c-5.33 0-8 2.67-8 4v1h16v-1c0-1.33-2.67-4-8-4z"/></svg></div>
+  <div class="topbar-t"><h1>Smart Health</h1><p id="userGreet">Medication assistant</p></div>
+  <div class="topbar-r">
+    <button class="icon-btn" id="pushBtn" onclick="reqPush()"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+    <div id="clock">--:--:--</div>
+    <div class="ubadge" onclick="doLogout()" id="uBadge"><div class="uav" id="uAv">?</div><span id="uLbl">user</span></div>
+  </div>
+</div></div>
+
+<!-- tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="sw('dash')"><span class="tabi">🏠</span>Home</button>
+  <button class="tab" onclick="authGate('add','Register a new patient')"><span class="tabi">➕</span>Add</button>
+  <button class="tab" onclick="sw('patients')"><span class="tabi">👥</span>Patients</button>
+  <button class="tab" onclick="sw('log')"><span class="tabi">📋</span>Log</button>
+  <button class="tab" onclick="sw('settings')"><span class="tabi">⚙️</span>Settings</button>
+</div>
+
+<!-- ════ DASHBOARD ════ -->
+<div id="tab-dash" class="panel active">
+  <div id="remBanner"></div>
+  <div id="instBanner" style="display:none" class="inst-banner">
+    <span style="font-size:24px">📲</span>
+    <div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--pu)">Install as app</div><div style="font-size:12px;color:var(--t2);margin-top:2px">Home screen icon · works offline</div></div>
+    <button class="btn bsm" style="background:var(--pu);color:#fff;border-color:var(--pu)" onclick="doPWA()">Install</button>
+  </div>
+  <!-- Healthcare hero banner -->
+  <div class="hero-banner">
+    <div class="hero-text">
+      <h2>Medication Care System</h2>
+      <p>AI-powered verification · voice reminders · instant caretaker alerts</p>
+      <div class="hero-pills">
+        <span class="hero-pill">💊 Med tracking</span>
+        <span class="hero-pill">🤖 AI Vision</span>
+        <span class="hero-pill">✈️ Auto alerts</span>
+        <span class="hero-pill">👁️ Gesture detect</span>
+      </div>
+    </div>
+    <div class="hero-icon">🏥</div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card sc-total"><span class="s-ic">👥</span><div class="sn" id="stP">0</div><div class="sl">Patients</div></div>
+    <div class="stat-card sc-taken"><span class="s-ic">✅</span><div class="sn" style="color:var(--gr)" id="stT">0</div><div class="sl">Taken today</div></div>
+    <div class="stat-card sc-missed"><span class="s-ic">⚠️</span><div class="sn" style="color:var(--re)" id="stM">0</div><div class="sl">Missed today</div></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="slabel" style="margin:0">Active patients</div><div id="tgBadge"></div>
+  </div>
+  <div id="patientList"></div>
+  <!-- healthcare info strip -->
+  <div class="hc-strip">
+    <div class="hc-icon">💡</div>
+    <div class="hc-text"><strong>Tip:</strong> Camera only activates automatically at scheduled medication time for patient privacy. Manual scan available via "Scan now" button.</div>
+  </div>
+</div>
+
+<!-- ════ ADD PATIENT ════ -->
+<div id="tab-add" class="panel">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:28px">🏥</span>
+      <div><div class="ctitle" style="margin:0">Register new patient</div><div style="font-size:12px;color:var(--t2)">All fields are saved to your account</div></div>
+    </div>
+    <label>Full name *</label><input type="text" id="pName" placeholder="e.g. Ramesh Kumar"/>
+    <div class="row2">
+      <div><label>Age</label><input type="number" id="pAge" placeholder="72" min="1" max="120"/></div>
+      <div><label>Condition</label><input type="text" id="pCond" placeholder="Amnesia"/></div>
+    </div>
+    <div class="divider"></div>
+    <label style="margin-bottom:8px">📸 Face photo (shown during verification)</label>
+    <div class="fu"><input type="file" accept="image/*" id="faceInput" onchange="handleFace(event)"/>
+      <div id="facePrev"><div style="font-size:36px;margin-bottom:5px">📷</div><div style="font-size:13px;font-weight:600;color:var(--t2)">Tap to upload face photo</div><div style="font-size:11px;color:var(--t3);margin-top:2px">Helps identify patient during camera verification</div></div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:20px">💊</span>
+      <div style="font-size:13px;font-weight:800;color:var(--t)">Medication schedule *</div>
+    </div>
+    <div id="medSlots"></div>
+    <button class="btn bsm" onclick="addMedSlot()" style="margin-bottom:14px">＋ Add medicine</button>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:20px">👤</span>
+      <div style="font-size:13px;font-weight:800;color:var(--t)">Caretaker details</div>
+    </div>
+    <label>Caretaker name</label><input type="text" id="ctName" placeholder="e.g. Priya Kumar"/>
+    <label>Caretaker Telegram Chat ID</label><input type="text" id="ctTgId" placeholder="e.g. 1037917869"/>
+    <p class="hint">💡 If blank, uses the Chat ID from Settings. Caretaker can get their ID from @userinfobot on Telegram.</p>
+    <div class="brow">
+      <button class="btn bg" onclick="savePatient()">✓ Save patient</button>
+      <button class="btn bgh" onclick="clearForm()">Clear</button>
+    </div>
+    <div id="formMsg" style="font-size:13px;margin-top:9px;display:none;padding:9px 12px;border-radius:var(--r6)"></div>
+  </div>
+</div>
+
+<!-- ════ PATIENTS LIST + EDIT ════ -->
+<div id="tab-patients" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="slabel" style="margin:0">All registered patients</div>
+    <button class="btn bg bsm" onclick="authGate('add','Add a new patient')">＋ Add new</button>
+  </div>
+  <div class="hc-strip" style="margin-bottom:14px">
+    <div class="hc-icon">🔐</div>
+    <div class="hc-text"><strong>Secure edits:</strong> Password verification is required before editing or adding patients to protect patient data.</div>
+  </div>
+  <div id="patientsFullList"></div>
+</div>
+
+<!-- ════ LOG ════ -->
+<div id="tab-log" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+    <div class="slabel" style="margin:0">Full event history</div>
+    <button class="btn bgh bsm" onclick="clearAlerts()">Clear all</button>
+  </div>
+  <div id="alertLog"></div>
+</div>
+
+<!-- ════ SETTINGS ════ -->
+<div id="tab-settings" class="panel">
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:26px">✈️</span>
+      <div><div class="ctitle" style="margin:0">Telegram auto-alerts</div><div style="font-size:12px;color:var(--t2)">Zero-tap automatic notifications</div></div>
+    </div>
+    <div class="tg-setup">
+      <h4>Bot configuration</h4>
+      <p style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:9px">Alerts fire instantly for every event — taken, missed, refused, SOS. Get a fresh token from <strong>@BotFather</strong> after revoking any exposed one.</p>
+      <label>Bot token</label><input type="password" id="tgToken" placeholder="1234567890:AAXXXXXX..."/>
+      <label>Main caretaker Chat ID</label><input type="text" id="tgChatId" placeholder="e.g. 1037917869"/>
+      <p class="hint">Used as fallback if patient has no individual caretaker Chat ID</p>
+      <div class="brow"><button class="btn btg bsm" onclick="saveTg()">Save &amp; test</button></div>
+      <div id="tgSt" style="font-size:12px;margin-top:7px"></div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span style="font-size:22px">🤖</span>
+      <div><div style="font-size:14px;font-weight:800">Claude AI Vision</div><div style="font-size:12px;color:var(--t2)">Pill detection · saved once permanently</div></div>
+    </div>
+    <label>Anthropic API key</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..."/>
+    <p class="hint">Used for AI pill detection during verification. Never re-asked after saving.</p>
+    <div class="brow"><button class="btn bg bsm" onclick="saveKey()">Save key</button></div>
+    <div id="apiSt" style="font-size:12px;margin-top:7px"></div>
+    <div class="divider"></div>
+    <div class="set-row">
+      <div class="set-info"><h4>🔔 Push notifications</h4><p>Device alerts when app is backgrounded</p></div>
+      <button class="btn bg bsm" onclick="reqPush()">Enable</button>
+    </div>
+    <div class="set-row">
+      <div class="set-info"><h4>📲 Install as app</h4><p>Add to home screen for offline use</p></div>
+      <button class="btn bsm" style="background:var(--pu);color:#fff;border-color:var(--pu)" onclick="doPWA()">Install</button>
+    </div>
+    <div class="set-row">
+      <div class="set-info"><h4>👤 Account</h4><p id="setUser">—</p></div>
+      <button class="btn br bsm" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+  <div class="hc-strip">
+    <div class="hc-icon">🛡️</div>
+    <div class="hc-text"><strong>Privacy:</strong> All patient data is stored locally on your device only, namespaced by your username. No data is sent to any server except Telegram and Anthropic API calls.</div>
+  </div>
+</div>
+
+</div><!-- /shell -->
+</div><!-- /appShell -->
+
+<!-- ════ SCAN MODAL ════ -->
+<div id="scanModal"><div id="scanInner"></div></div>
+
+<!-- ════ AUTH CONFIRM MODAL ════ -->
+<div id="authModal">
+  <div id="authInner">
+    <div class="auth-ic">🔐</div>
+    <div class="auth-title" id="authTitle">Security check</div>
+    <div class="auth-sub" id="authSub">Enter your password to continue</div>
+    <label>Password</label>
+    <input type="password" id="authPass" placeholder="Enter your password" style="margin-bottom:14px"/>
+    <div class="brow" style="justify-content:center">
+      <button class="btn bg" onclick="confirmAuth()" style="flex:1">Confirm</button>
+      <button class="btn bgh" onclick="cancelAuth()">Cancel</button>
+    </div>
+    <div id="authErr" style="font-size:12px;color:var(--rd);margin-top:8px;text-align:center;display:none"></div>
+  </div>
+</div>
+
+<!-- ════ EDIT PATIENT MODAL ════ -->
+<div id="editModal">
+  <div id="editInner">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div><div style="font-size:15px;font-weight:800">✏️ Edit patient</div><div style="font-size:12px;color:var(--t2);margin-top:2px" id="editPatientName">—</div></div>
+      <button class="btn bgh bsm" onclick="closeEdit()">✕</button>
+    </div>
+    <div id="editFormContent"></div>
+  </div>
+</div>
+
+<!-- ════ GENERIC MODAL ════ -->
+<div id="modal"><div id="modal-in"></div></div>
+<div id="toast"></div>
+
+<script>
+// ════ GESTURE ENGINE (MediGesture v2 — exact port) ════
+const GESTURE_SMOOTHING_FRAMES=5,GESTURE_CONFIDENCE_THRESHOLD=0.6,GESTURE_COOLDOWN_MS=1000;
+let gBuf=[],gLastActionTime=0,gLastAction='none',gConfidence=0;
+function getAngle(p1,p2,p3){const v1={x:p1.x-p2.x,y:p1.y-p2.y},v2={x:p3.x-p2.x,y:p3.y-p2.y};const dot=v1.x*v2.x+v1.y*v2.y,mag=Math.sqrt(v1.x**2+v1.y**2)*Math.sqrt(v2.x**2+v2.y**2);return Math.acos(Math.min(1,Math.max(-1,dot/mag)))*(180/Math.PI);}
+function isFingerCurled(tip,dip,pip,mcp){return getAngle(mcp,pip,dip)<100||getAngle(pip,dip,tip)<140;}
+function detectGesture(lm){
+  if(!lm||lm.length<21)return'none';
+  const w=lm[0],tMCP=lm[2],tTip=lm[4],iMCP=lm[5],iPIP=lm[6],iTip=lm[8],mMCP=lm[9],mPIP=lm[10],mTip=lm[12],rMCP=lm[13],rPIP=lm[14],rTip=lm[16],pMCP=lm[17],pPIP=lm[18],pTip=lm[20];
+  const iE=!isFingerCurled(iTip,lm[7],iPIP,iMCP),mE=!isFingerCurled(mTip,lm[11],mPIP,mMCP),rE=!isFingerCurled(rTip,lm[15],rPIP,rMCP),pE=!isFingerCurled(pTip,lm[19],pPIP,pMCP);
+  const tExt=tMCP.x<tTip.x,tUp=tTip.y<w.y-0.15,palmUp=w.y>((iMCP.x+pMCP.x)/2);
+  const ext=[iE,mE,rE,pE].filter(Boolean).length;
+  if(tUp&&ext===0&&tExt&&palmUp)return'thumbs_up';
+  if(ext===4&&tExt)return'open_palm';
+  if(iE&&mE&&!rE&&!pE)return'peace';
+  if(ext===0&&!tExt&&tTip.y>tMCP.y)return'fist';
+  return'none';
+}
+function smoothGesture(raw){
+  gBuf.push(raw);if(gBuf.length>GESTURE_SMOOTHING_FRAMES)gBuf.shift();
+  const c={thumbs_up:0,open_palm:0,fist:0,peace:0,none:0};gBuf.forEach(g=>{if(c[g]!==undefined)c[g]++;});
+  let max=0,best='none';Object.entries(c).forEach(([g,n])=>{if(n>max&&g!=='none'){max=n;best=g;}});
+  gConfidence=max/gBuf.length;return(gConfidence>=GESTURE_CONFIDENCE_THRESHOLD&&best!=='none')?best:'none';
+}
+function handleGestureAction(gesture,pid){
+  const now=Date.now();
+  document.querySelectorAll('.gest-item').forEach(el=>{el.classList.remove('active','detecting');if(el.id==='gi_'+gesture)el.classList.add('detecting');});
+  if(now-gLastActionTime<GESTURE_COOLDOWN_MS)return;
+  if(gesture!==gLastAction&&gesture!=='none'){
+    gLastActionTime=now;gLastAction=gesture;
+    document.querySelectorAll('.gest-item').forEach(el=>{el.classList.remove('active','detecting');if(el.id==='gi_'+gesture)el.classList.add('active');});
+    if(gesture==='thumbs_up'){showSuccessFlash();setTimeout(()=>{stopCam();stopVTimer();recordAction(pid,'taken','👍 thumbs-up gesture');},600);}
+    else if(gesture==='fist'){setTimeout(()=>{stopCam();stopVTimer();recordAction(pid,'refused','✊ fist gesture');},400);}
+  }
+  if(gesture==='none'&&now-gLastActionTime>GESTURE_COOLDOWN_MS){gLastAction='none';document.querySelectorAll('.gest-item').forEach(el=>el.classList.remove('active','detecting'));}
+}
+function showSuccessFlash(){const box=document.getElementById('camBox');if(!box)return;const fl=document.createElement('div');fl.className='success-flash';fl.innerHTML='<div class="sf-inner"><span style="font-size:60px">✅</span><p style="color:#fff;font-weight:800;font-size:15px;margin-top:8px">Medicine confirmed!</p></div>';box.appendChild(fl);setTimeout(()=>fl.remove(),1800);}
+
+// ════ STATE ════
+let currentUser=null,patients=[],alertLog=[],faceSrc=null,medSlotCount=0;
+let lastRemKey='',camStream=null,mpHands=null,camRunning=false;
+let vTimer=null,vTimeLeft=120,aiScanInt=null,aiScanning=false;
+let tgToken='',tgChatId='',pushOn=false,deferredInstall=null,apiKey='';
+let authCallback=null,editingPatientId=null;
+
+// ════ AUTH ════
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
+function getUsers(){try{return JSON.parse(localStorage.getItem('sha_users')||'{}')}catch(e){return{};}}
+function saveUsers(u){localStorage.setItem('sha_users',JSON.stringify(u));}
+function setMode(m){
+  document.querySelectorAll('.ltab').forEach((t,i)=>t.classList.toggle('active',(i===0&&m==='login')||(i===1&&m==='register')));
+  const btn=document.getElementById('lBtn');
+  btn.textContent=m==='login'?'Sign in':'Create account';
+  btn.onclick=m==='login'?doLogin:doRegister;
+  ['lErr','lOk'].forEach(id=>document.getElementById(id).style.display='none');
+}
+function showLE(m){const e=document.getElementById('lErr');e.textContent=m;e.style.display='block';document.getElementById('lOk').style.display='none';}
+function showLO(m){const e=document.getElementById('lOk');e.textContent=m;e.style.display='block';document.getElementById('lErr').style.display='none';}
+async function doLogin(){
+  const u=(document.getElementById('lUser').value||'').trim().toLowerCase(),p=document.getElementById('lPass').value;
+  if(!u||!p)return showLE('Enter username and password.');
+  const users=getUsers();
+  if(!users[u])return showLE('Username not found. Please register first.');
+  if(users[u].hash!==await sha256(p))return showLE('Incorrect password.');
+  loginOK(u);
+}
+async function doRegister(){
+  const u=(document.getElementById('lUser').value||'').trim().toLowerCase(),p=document.getElementById('lPass').value;
+  if(!u||!p)return showLE('Enter username and password.');
+  if(u.length<3)return showLE('Username must be at least 3 characters.');
+  if(p.length<6)return showLE('Password must be at least 6 characters.');
+  const users=getUsers();
+  if(users[u])return showLE('Username already taken. Choose another.');
+  users[u]={hash:await sha256(p),created:Date.now()};
+  saveUsers(users);showLO('Account created! Signing in…');
+  setTimeout(()=>loginOK(u),700);
+}
+function loginOK(username){
+  currentUser=username;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='block';
+  document.getElementById('userGreet').textContent=`Hello, ${username}`;
+  document.getElementById('uLbl').textContent=username;
+  document.getElementById('uAv').textContent=username[0].toUpperCase();
+  document.getElementById('setUser').textContent=`Logged in as ${username}`;
+  loadUserData();initApp();
+}
+function doLogout(){
+  if(!confirm('Log out?'))return;
+  stopCam();stopVTimer();currentUser=null;
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('lUser').value='';document.getElementById('lPass').value='';
+  setMode('login');
+}
+
+// ════ AUTH GATE — require password for sensitive actions ════
+function authGate(action, reason){
+  document.getElementById('authTitle').textContent='Security verification';
+  document.getElementById('authSub').textContent=`${reason} — please confirm your password to continue.`;
+  document.getElementById('authPass').value='';
+  document.getElementById('authErr').style.display='none';
+  authCallback=action;
+  document.getElementById('authModal').classList.add('open');
+  setTimeout(()=>document.getElementById('authPass').focus(),200);
+}
+async function confirmAuth(){
+  const pass=document.getElementById('authPass').value;
+  if(!pass){document.getElementById('authErr').textContent='Enter your password.';document.getElementById('authErr').style.display='block';return;}
+  const users=getUsers();
+  const hash=await sha256(pass);
+  if(users[currentUser]?.hash!==hash){document.getElementById('authErr').textContent='Incorrect password. Try again.';document.getElementById('authErr').style.display='block';return;}
+  document.getElementById('authModal').classList.remove('open');
+  const action=authCallback;authCallback=null;
+  if(action==='add'){sw('add');}
+  else if(action&&action.startsWith('edit:'))openEditModal(parseInt(action.split(':')[1]));
+  else if(action&&action.startsWith('delete:'))doDeletePatient(parseInt(action.split(':')[1]));
+}
+function cancelAuth(){document.getElementById('authModal').classList.remove('open');authCallback=null;}
+document.getElementById('authModal').addEventListener('click',e=>{if(e.target.id==='authModal')cancelAuth();});
+document.getElementById('authPass').addEventListener('keydown',e=>{if(e.key==='Enter')confirmAuth();});
+
+// ════ PER-USER STORAGE ════
+function uKey(k){return`sha_${currentUser}_${k}`;}
+function loadUserData(){
+  try{patients=JSON.parse(localStorage.getItem(uKey('p'))||'[]')}catch(e){patients=[];}
+  try{alertLog=JSON.parse(localStorage.getItem(uKey('a'))||'[]')}catch(e){alertLog=[];}
+  tgToken=localStorage.getItem(uKey('tgt'))||'';
+  tgChatId=localStorage.getItem(uKey('tgc'))||'';
+  apiKey=localStorage.getItem(uKey('key'))||'';
+  if(tgToken){const el=document.getElementById('tgToken');if(el)el.value=tgToken;}
+  if(tgChatId){const el=document.getElementById('tgChatId');if(el)el.value=tgChatId;}
+  if(apiKey){const el=document.getElementById('apiKeyInput');if(el)el.value=apiKey;}
+  if(tgToken&&tgChatId)document.getElementById('tgBadge').innerHTML='<span class="tgb">✈️ Telegram active</span>';
+}
+function save(){if(!currentUser)return;localStorage.setItem(uKey('p'),JSON.stringify(patients));localStorage.setItem(uKey('a'),JSON.stringify(alertLog));}
+
+// ════ PWA ════
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;document.getElementById('instBanner').style.display='flex';});
+window.addEventListener('appinstalled',()=>{document.getElementById('instBanner').style.display='none';toast('✓ App installed!');});
+function doPWA(){if(!deferredInstall)return;deferredInstall.prompt();deferredInstall.userChoice.then(()=>deferredInstall=null);}
+
+// ════ TELEGRAM ════
+function saveTg(){
+  const t=(document.getElementById('tgToken').value||'').trim(),c=(document.getElementById('tgChatId').value||'').trim();
+  if(!t||!c){setTgSt('Both token and Chat ID required','err');return;}
+  tgToken=t;tgChatId=c;localStorage.setItem(uKey('tgt'),t);localStorage.setItem(uKey('tgc'),c);
+  setTgSt('Testing…','info');
+  sendTg('✅ <b>Smart Health connected!</b>\n\nAutomatic medication alerts will appear here. 💊 — Smart Health App',tgChatId).then(ok=>{
+    if(ok){setTgSt('✓ Connected — test message sent','ok');toast('✓ Telegram connected!');document.getElementById('tgBadge').innerHTML='<span class="tgb">✈️ Telegram active</span>';}
+    else setTgSt('❌ Failed — verify token and Chat ID','err');
+  });
+}
+function setTgSt(m,t){const el=document.getElementById('tgSt');if(el){el.textContent=m;el.style.color=t==='ok'?'var(--gr)':t==='err'?'var(--rd)':'var(--t2)';}}
+async function sendTg(text,chatId){
+  if(!tgToken)return false;const c=chatId||tgChatId;if(!c)return false;
+  try{const r=await fetch(`https://api.telegram.org/bot${tgToken}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c,text,parse_mode:'HTML'})});return(await r.json()).ok;}
+  catch(e){return false;}
+}
+function tgMsg(p,status,time,meds){
+  const em={taken:'✅',refused:'⚠️',missed:'🚨',absent:'🚨',emergency:'🆘'};
+  const lb={taken:'Medication TAKEN ✅',refused:'Medication REFUSED ⚠️',missed:'Medication MISSED 🚨',absent:'Patient NOT REACHABLE 🚨',emergency:'EMERGENCY SOS 🆘'};
+  return`${em[status]||'💊'} <b>Smart Health Alert</b>\n\n<b>Patient:</b> ${p.name}${p.age?' ('+p.age+'y)':''} \n<b>Status:</b> ${lb[status]||status}\n<b>Medication:</b> ${meds}\n<b>Time:</b> ${time}\n<b>Caretaker:</b> ${p.ctName||'—'}\n\n<i>Sent automatically — Smart Health App</i>`;
+}
+
+// ════ API KEY ════
+function saveKey(){const v=(document.getElementById('apiKeyInput').value||'').trim();if(!v.startsWith('sk-ant')){document.getElementById('apiSt').textContent='Invalid — must start with sk-ant';document.getElementById('apiSt').style.color='var(--rd)';return;}apiKey=v;localStorage.setItem(uKey('key'),v);document.getElementById('apiSt').textContent='✓ Saved permanently — never asked again';document.getElementById('apiSt').style.color='var(--gr)';toast('✓ API key saved');}
+
+// ════ PUSH ════
+async function reqPush(){if(!('Notification'in window)){toast('Not supported');return;}const p=await Notification.requestPermission();if(p==='granted'){pushOn=true;document.getElementById('pushBtn').classList.add('on');localStorage.setItem('sha_push','1');new Notification('Smart Health ✓',{body:'Push notifications active!',icon:'icon-192.png'});toast('🔔 Push enabled');}else toast('Permission denied');}
+function sendPush(title,body,tag){if(!pushOn||Notification.permission!=='granted')return;try{new Notification(title,{body,icon:'icon-192.png',tag:tag||'sha',requireInteraction:true,vibrate:[300,100,300]});}catch(e){}}
+
+// ════ CLOCK + AUTO CHECK ════
+function clockTick(){
+  const now=new Date(),el=document.getElementById('clock');
+  if(el)el.textContent=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if(!currentUser)return;
+  const hhmm=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  patients.forEach(p=>p.meds.forEach(m=>{const key=`${p.id}:${m.time}`;if(m.time===hhmm&&lastRemKey!==key){lastRemKey=key;autoFire(p,m);}}));
+}
+setInterval(clockTick,1000);clockTick();
+
+// ════ AUTO FIRE AT MED TIME ════
+function autoFire(p,m){
+  strongSpeak(`ATTENTION! ${p.name}! It is time to take your ${m.name}! The verification camera is opening now!`);
+  sendPush(`💊 Medication Time!`,`${p.name} must take ${m.name} now.`,'rem');
+  sendTg(`⏰ <b>Medication Reminder — Auto Alert</b>\n\n<b>Patient:</b> ${p.name}\n<b>Take:</b> ${m.name}\n<b>Scheduled:</b> ${m.time}\n\nCamera verification opened automatically.`,p.ctTgId||tgChatId);
+  const b=document.getElementById('remBanner');
+  if(b){
+    const fa=p.face?`<img src="${p.face}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--gr)">`:`<div class="p-avi" style="width:44px;height:44px;font-size:14px">${ini(p.name)}</div>`;
+    b.innerHTML=`<div class="rem-card"><div class="rem-head"><div class="pr"></div><h3>💊 Medication time — camera opened!</h3></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">${fa}
+        <div><div style="font-size:15px;font-weight:800;color:var(--t)">${p.name}</div>
+        <div style="font-size:12px;color:var(--ad);margin-top:2px">Take <strong>${m.name}</strong> · ${m.time}</div></div>
+      </div>
+      <div class="brow">
+        <button class="btn bg bsm" onclick="openScan(${p.id})">📷 Open camera</button>
+        <button class="btn bsm" style="color:var(--rd);border-color:var(--rd)" onclick="logMissed(${p.id},'${m.name}')">✗ Mark missed</button>
+        <button class="btn bgh bsm" onclick="document.getElementById('remBanner').innerHTML=''">Dismiss</button>
+      </div>
+    </div>`;
+  }
+  setTimeout(()=>openScan(p.id),900);
+  toast(`⏰ ${p.name} — ${m.name} time!`);
+}
+
+// ════ SCAN MODAL — camera only opens here ════
+function openScan(pid){
+  const p=patients.find(x=>x.id===pid);if(!p)return;
+  document.getElementById('scanModal').classList.add('open');
+  const meds=p.meds.map(m=>`<span class="pbadge"><div class="pdot"></div>${m.name} <span style="color:var(--t3)">${m.time}</span></span>`).join('');
+  const fa=p.face?`<img style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gr);box-shadow:0 0 0 5px var(--grl);display:block;margin:0 auto" src="${p.face}">`:`<div class="p-avi" style="width:72px;height:72px;font-size:20px;margin:0 auto">${ini(p.name)}</div>`;
+  document.getElementById('scanInner').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px">🔍</span><div style="font-size:15px;font-weight:800;color:var(--t)">Medication Verification</div></div>
+      <button class="btn bgh bsm" onclick="closeScan()">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:12px">${fa}
+      <div style="font-size:16px;font-weight:800;margin-top:9px;color:var(--t)">${p.name}${p.age?` <span style="font-size:12px;color:var(--t2);font-weight:400">· ${p.age}y</span>`:''}</div>
+      <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin-top:7px">${meds}</div>
+    </div>
+    <div class="voice-bar" id="vBar"><div class="waves"><div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div></div><span id="vText" style="flex:1">Loading voice reminder…</span></div>
+    <div class="timer-wrap">
+      <svg id="timerSvg" width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="33" fill="none" stroke="var(--sur3)" stroke-width="6"/>
+        <circle id="timerArc" cx="40" cy="40" r="33" fill="none" stroke="var(--gr)" stroke-width="6" stroke-dasharray="207.3" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+        <text x="40" y="44" text-anchor="middle" font-size="13" font-weight="800" fill="var(--t)" id="timerTxt">2:00</text>
+      </svg>
+      <div style="font-size:11px;color:var(--t2)">Caretaker auto-alerted on expiry</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <div class="slabel" style="margin-bottom:5px">📷 Camera (auto-started)</div>
+        <div class="cam-outer" id="camBox" style="aspect-ratio:4/3">
+          <video id="camVid" autoplay playsinline muted></video>
+          <canvas id="gestCvs"></canvas>
+          <div class="hand-indicator" id="handInd"><div class="hand-dot searching" id="handDot"></div><span id="handTxt">Starting…</span></div>
+          <div class="cam-lbl" id="camLbl">Camera initialising…</div>
+        </div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:7px">
+          <button class="btn br bsm" id="stopBtn" onclick="stopCam()" style="display:none">⏹ Stop</button>
+        </div>
+      </div>
+      <div>
+        <div class="slabel" style="margin-bottom:5px">🤖 AI + Gesture</div>
+        <div class="ai-box" id="aiBox">
+          <div class="ai-ic">🤖</div><div class="ai-ttl">Initialising…</div><div class="ai-dsc">Claude Vision scans every 5s. Show 👍 to confirm.</div>
+        </div>
+      </div>
+    </div>
+    <div class="gest-guide">
+      <div style="font-size:12px;font-weight:700;color:var(--t2);display:flex;align-items:center;gap:6px"><span>🤚</span>Gesture guide</div>
+      <div class="gest-grid">
+        <div class="gest-item" id="gi_thumbs_up"><span class="gest-emoji">👍</span><span class="gest-lbl">Confirm</span></div>
+        <div class="gest-item" id="gi_open_palm"><span class="gest-emoji">🖐</span><span class="gest-lbl">Next</span></div>
+        <div class="gest-item" id="gi_fist"><span class="gest-emoji">✊</span><span class="gest-lbl">Refuse</span></div>
+        <div class="gest-item" id="gi_peace"><span class="gest-emoji">✌️</span><span class="gest-lbl">Reset</span></div>
+      </div>
+      <div class="conf-row" id="confRow" style="display:none;margin-top:6px">
+        <div style="font-size:10px;color:var(--t2);white-space:nowrap">Confidence</div>
+        <div class="conf-bar"><div class="conf-fill" id="confFill" style="width:0%"></div></div>
+        <div style="font-size:11px;font-weight:700;color:var(--gr)" id="confPct">0%</div>
+      </div>
+    </div>
+    <div class="tips-bar">
+      <div class="tip-item"><span class="tip-check">✓</span>Keep hand 30–50cm from camera</div>
+      <div class="tip-item"><span class="tip-check">✓</span>Ensure good lighting</div>
+      <div class="tip-item"><span class="tip-check">✓</span>Hold gesture 1–2 seconds</div>
+    </div>
+    <div class="divider"></div>
+    <div class="slabel">Manual override</div>
+    <div class="brow" style="justify-content:center;margin-bottom:12px">
+      <button class="btn bg" onclick="recordAction(${p.id},'taken','manual')">✓ Taken</button>
+      <button class="btn bsm" style="color:var(--rd);border-color:var(--rd)" onclick="recordAction(${p.id},'refused','manual')">✗ Refused</button>
+      <button class="btn bam bsm" onclick="recordAction(${p.id},'absent','manual')">Not reachable</button>
+    </div>
+    <div id="verResult"></div>`;
+  strongSpeak(`Attention ${p.name}! Time to take your ${p.meds.map(m=>m.name).join(' and ')}. Show a thumbs up to the camera after taking your pill.`);
+  stopVTimer();startVTimer(p);
+  // AUTO-start camera — no button press needed
+  setTimeout(()=>startCam(p.id),400);
+}
+function closeScan(){stopCam();stopVTimer();document.getElementById('scanModal').classList.remove('open');}
+
+// ════ CAMERA — auto-starts, no manual start button ════
+const HAND_CONNECTIONS=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20],[5,9],[9,13],[13,17]];
+const LM_COLORS=['#ff6b6b','#ffd93d','#ffd93d','#ffd93d','#ffd93d','#6bcb77','#6bcb77','#6bcb77','#6bcb77','#4d96ff','#4d96ff','#4d96ff','#4d96ff','#9b59b6','#9b59b6','#9b59b6','#9b59b6','#ff8c42','#ff8c42','#ff8c42','#ff8c42'];
+
+function startCam(pid){
+  const p=patients.find(x=>x.id===pid);if(!p)return;
+  const vid=document.getElementById('camVid'),cvs=document.getElementById('gestCvs'),lbl=document.getElementById('camLbl');
+  if(!vid)return;
+  lbl.textContent='Requesting camera…';
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'user'},width:{ideal:640},height:{ideal:480}},audio:false})
+    .then(stream=>{
+      camStream=stream;vid.srcObject=stream;camRunning=true;
+      const sb=document.getElementById('stopBtn');if(sb)sb.style.display='inline-flex';
+      lbl.textContent='Show 👍 thumbs-up after taking pill';lbl.className='cam-lbl';
+      vid.play().catch(()=>{});
+      stopAiScan();aiScanInt=setInterval(()=>doAiScan(pid),5000);
+      const waitVid=()=>{if(vid.readyState>=2&&vid.videoWidth>0)initMP(p,vid,cvs,lbl);else setTimeout(waitVid,200);};waitVid();
+      setAI('👀','Camera active','Gesture engine loading. Show 👍 after taking your pill.',0,'ok');
+    })
+    .catch(err=>{
+      const msg=err.name==='NotAllowedError'?'Camera permission denied — use manual buttons.':err.name==='NotFoundError'?'No camera found.':err.name==='NotReadableError'?'Camera busy — close other apps.':'Camera error.';
+      lbl.textContent=msg;lbl.className='cam-lbl lr';setAI('📷','Camera unavailable',msg,0,'warn');
+    });
+}
+
+function initMP(p,vid,cvs,lbl){
+  if(typeof Hands==='undefined'){setAI('⚠️','MediaPipe unavailable','Use manual buttons or AI scan.',0,'warn');return;}
+  try{
+    const hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
+    mpHands=hands;
+    hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.75,minTrackingConfidence:0.6});
+    const ctx=cvs.getContext('2d');
+    hands.onResults(res=>{
+      if(!camRunning)return;
+      if(cvs.width!==vid.videoWidth||cvs.height!==vid.videoHeight){cvs.width=vid.videoWidth||320;cvs.height=vid.videoHeight||240;}
+      ctx.clearRect(0,0,cvs.width,cvs.height);
+      const hDot=document.getElementById('handDot'),hTxt=document.getElementById('handTxt');
+      if(res.multiHandLandmarks?.length>0){
+        const lm=res.multiHandLandmarks[0];
+        if(typeof drawConnectors!=='undefined')drawConnectors(ctx,lm,HAND_CONNECTIONS,{color:'#34d399',lineWidth:2.5});
+        lm.forEach((pt,idx)=>{const s=4+(1-Math.abs(pt.z))*3;ctx.beginPath();ctx.arc(pt.x*cvs.width,pt.y*cvs.height,s,0,2*Math.PI);ctx.fillStyle=LM_COLORS[idx]||'#fff';ctx.fill();});
+        if(hDot)hDot.className='hand-dot detected';if(hTxt)hTxt.textContent='Hand Detected';
+        const raw=detectGesture(lm),smoothed=smoothGesture(raw);
+        const confRow=document.getElementById('confRow'),confFill=document.getElementById('confFill'),confPct=document.getElementById('confPct');
+        if(confRow)confRow.style.display=raw!=='none'?'flex':'none';
+        if(confFill){const pct=Math.round(gConfidence*100);confFill.style.width=pct+'%';confFill.style.background=pct>70?'var(--gr)':pct>40?'var(--am)':'var(--re)';}
+        if(confPct)confPct.textContent=Math.round(gConfidence*100)+'%';
+        const lblEl=document.getElementById('camLbl');
+        if(lblEl){
+          if(smoothed==='thumbs_up'){lblEl.className='cam-lbl lg';lblEl.textContent=`👍 Thumbs-up! Conf: ${Math.round(gConfidence*100)}%`;}
+          else if(smoothed==='fist'){lblEl.className='cam-lbl lr';lblEl.textContent='✊ Fist — logging refusal…';}
+          else if(smoothed==='open_palm'){lblEl.className='cam-lbl la';lblEl.textContent='🖐 Open palm';}
+          else if(smoothed==='peace'){lblEl.className='cam-lbl la';lblEl.textContent='✌️ Peace sign';}
+          else{lblEl.className='cam-lbl';lblEl.textContent=raw!=='none'?'Hold gesture steadily…':'Show 👍 thumbs-up after taking pill';}
+        }
+        handleGestureAction(smoothed,p.id);
+      }else{
+        gBuf.push('none');if(gBuf.length>GESTURE_SMOOTHING_FRAMES)gBuf.shift();
+        if(hDot)hDot.className='hand-dot searching';if(hTxt)hTxt.textContent='Searching…';
+        const lblEl=document.getElementById('camLbl');if(lblEl){lblEl.className='cam-lbl';lblEl.textContent='No hand detected — show your hand';}
+        const confRow=document.getElementById('confRow');if(confRow)confRow.style.display='none';
+        document.querySelectorAll('.gest-item').forEach(el=>el.classList.remove('active','detecting'));
+      }
+    });
+    const loop=async()=>{if(!camRunning||!mpHands)return;if(vid.readyState>=2&&vid.videoWidth>0)try{await hands.send({image:vid});}catch(e){}requestAnimationFrame(loop);};loop();
+    setAI('👀','Gesture engine ready',`Angle-based detection active (${Math.round(GESTURE_CONFIDENCE_THRESHOLD*100)}% threshold, ${GESTURE_SMOOTHING_FRAMES}-frame smoothing). Show 👍 to confirm.`,0,'ok');
+  }catch(e){setAI('⚠️','Gesture unavailable','Use Claude AI scan or manual buttons.',0,'warn');}
+}
+function stopCam(){
+  camRunning=false;stopAiScan();
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  if(mpHands){try{mpHands.close();}catch(e){}mpHands=null;}
+  gBuf=[];gLastAction='none';
+  const st=document.getElementById('stopBtn'),lbl=document.getElementById('camLbl');
+  if(st)st.style.display='none';if(lbl){lbl.className='cam-lbl';lbl.textContent='Camera stopped';}
+}
+
+// ════ CLAUDE AI SCAN ════
+function stopAiScan(){if(aiScanInt){clearInterval(aiScanInt);aiScanInt=null;}aiScanning=false;}
+async function doAiScan(pid){
+  if(aiScanning)return;const p=patients.find(x=>x.id===pid);if(!p)return;
+  const vid=document.getElementById('camVid');if(!vid||!vid.videoWidth||!camRunning)return;
+  if(!apiKey){setAI('🔑','No API key','Add Anthropic API key in Settings.',0,'warn');return;}
+  aiScanning=true;setAI('⏳','Scanning…','Claude Vision analysing frame for pills…',0,'loading');
+  const c=document.createElement('canvas');c.width=vid.videoWidth;c.height=vid.videoHeight;
+  const ctx=c.getContext('2d');ctx.save();ctx.scale(-1,1);ctx.drawImage(vid,-c.width,0);ctx.restore();
+  const b64=c.toDataURL('image/jpeg',.75).split(',')[1];
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-opus-4-5',max_tokens:250,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},{type:'text',text:`Medical AI. Patient: ${p.name}. Meds: ${p.meds.map(m=>m.name).join(', ')}. Reply ONLY in JSON: {"pill_visible":bool,"intake_detected":bool|null,"assessment":"taken"|"pill_visible"|"no_pill"|"unclear","confidence":0-100,"notes":"brief"}`}]}]})});
+    const data=await res.json();let result;
+    try{result=JSON.parse((data.content?.[0]?.text||'{}'  ).replace(/```json|```/g,'').trim());}catch(e){result={assessment:'unclear',confidence:0};}
+    const conf=result.confidence||0;
+    if(result.assessment==='taken'||result.intake_detected===true){setAI('✅',`Pill detected! (${conf}%)`,result.notes||'Medication confirmed by AI.',conf,'ok');if(conf>=65){showSuccessFlash();setTimeout(()=>{stopCam();stopVTimer();stopAiScan();recordAction(p.id,'taken','Claude AI Vision');},600);}}
+    else if(result.pill_visible||result.assessment==='pill_visible'){setAI('💊',`Pill visible (${conf}%)`,`${p.meds[0]?.name||'Medication'} seen — take it now.`,conf,'info');strongSpeak(`${p.name}, a pill is visible. Please take your ${p.meds[0]?.name||'medicine'} now.`);}
+    else if(result.assessment==='no_pill'){setAI('❓',`No pill (${conf}%)`,`Hold ${p.meds[0]?.name||'medicine'} to camera or show 👍 after taking.`,conf,'warn');}
+    else{setAI('🔍','Scanning…',result.notes||'Show pill to camera or show 👍 after taking.',conf,'neutral');}
+  }catch(err){setAI('⚠️','Scan error',err.message?.includes('401')?'Invalid API key.':'Network error.',0,'warn');}
+  aiScanning=false;
+}
+function setAI(icon,title,desc,conf,type){
+  const box=document.getElementById('aiBox');if(!box)return;
+  const tc={ok:'var(--gr)',warn:'var(--ad)',info:'var(--teal)',loading:'var(--t2)',neutral:'var(--t2)'};
+  box.innerHTML=`<div class="ai-ic">${icon}</div><div class="ai-ttl" style="color:${tc[type]||'var(--t)'}">${title}</div><div class="ai-dsc">${desc}</div>${conf>0?`<div class="conf-row" style="width:100%;margin-top:4px"><div style="font-size:10px;color:var(--t2);white-space:nowrap">Conf</div><div class="conf-bar"><div class="conf-fill" style="width:${conf}%;background:${conf>70?'var(--gr)':conf>40?'var(--am)':'var(--re)'}"></div></div><div style="font-size:11px;font-weight:700;color:var(--gr)">${conf}%</div></div>`:''}<button class="btn bsm bg" style="margin-top:6px;font-size:11px" onclick="doAiScan(${patients.find(x=>x)?.id||0})">🔍 Scan now</button>`;
+}
+
+// ════ 2-MIN TIMER ════
+function startVTimer(p){
+  stopVTimer();vTimeLeft=120;updateTimerUI(120);
+  vTimer=setInterval(()=>{
+    vTimeLeft--;updateTimerUI(vTimeLeft);
+    if([60,30,15].includes(vTimeLeft))strongSpeak(`${vTimeLeft} seconds remaining. ${p.name}, please take your ${p.meds[0]?.name||'medicine'} now.`);
+    if(vTimeLeft<=0){
+      stopVTimer();stopCam();stopAiScan();
+      const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),meds=p.meds.map(m=>m.name).join(', ');
+      pushLog(p,'missed',now,meds,'timer-expired');
+      sendPush('⚠️ Not taken!',`${p.name} did not confirm taking ${meds}.`,'missed');
+      sendTg(tgMsg(p,'missed',now,meds),p.ctTgId||tgChatId);
+      strongSpeak(`Time expired! ${p.name} has not confirmed medication! Alerting caretaker now!`);
+      const vr=document.getElementById('verResult');if(vr)vr.innerHTML='<div class="vr-box vrfl">⏰ Timer expired — Telegram sent to caretaker automatically!</div>';
+    }
+  },1000);
+}
+function stopVTimer(){if(vTimer){clearInterval(vTimer);vTimer=null;}}
+function updateTimerUI(s){
+  const arc=document.getElementById('timerArc'),txt=document.getElementById('timerTxt');if(!arc||!txt)return;
+  arc.style.strokeDashoffset=(207.3*(1-s/120)).toFixed(2);
+  arc.style.stroke=s>50?'var(--gr)':s>20?'var(--am)':'var(--re)';
+  txt.textContent=`${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+}
+
+// ════ RECORD ACTION ════
+function recordAction(id,status,method){
+  const p=patients.find(x=>x.id===id);if(!p)return;
+  stopVTimer();stopCam();stopAiScan();
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),meds=p.meds.map(m=>m.name).join(', ');
+  pushLog(p,status,now,meds,method);save();renderDash();
+  sendTg(tgMsg(p,status,now,meds),p.ctTgId||tgChatId);
+  const pn={taken:['✅ Taken!',`${p.name} took ${meds}`],refused:['⚠️ Refused',`${p.name} refused`],absent:['🚨 Unreachable',`${p.name} not reachable`]};
+  if(pn[status])sendPush(pn[status][0],pn[status][1],status);
+  const vr=document.getElementById('verResult');
+  if(status==='taken'){if(vr)vr.innerHTML=`<div class="vr-box vrok">✅ Confirmed taken at ${now} via ${method}. Telegram sent!</div>`;strongSpeak(`Excellent! ${p.name}! Medication recorded. Well done! Your caretaker has been informed.`);setTimeout(closeScan,2400);}
+  else if(status==='refused'){if(vr)vr.innerHTML=`<div class="vr-box vrfl">⚠️ Refused at ${now}. Telegram alert sent!</div>`;strongSpeak(`${p.name}, please take your medication. Your caretaker has been alerted immediately.`);}
+  else{if(vr)vr.innerHTML=`<div class="vr-box vrwn">⚠️ Not reachable at ${now}. Telegram alert sent!</div>`;}
+}
+function logMissed(id,medName){
+  const p=patients.find(x=>x.id===id);if(!p)return;
+  const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  pushLog(p,'missed',now,medName,'dashboard');
+  sendTg(tgMsg(p,'missed',now,medName),p.ctTgId||tgChatId);
+  sendPush('⚠️ Missed dose',`${p.name} missed ${medName} at ${now}`,'missed');
+  document.getElementById('remBanner').innerHTML='';renderDash();toast(`Missed logged for ${p.name}`);
+}
+
+// ════ TAB SWITCHER ════
+function sw(t){
+  ['dash','add','patients','log','settings'].forEach((n,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',n===t);
+    const el=document.getElementById('tab-'+n);if(el)el.classList.toggle('active',n===t);
+  });
+  if(t==='dash')renderDash();
+  if(t==='patients')renderPatientsList();
+  if(t==='log')renderAlerts();
+}
+
+// ════ DASHBOARD ════
+function renderDash(){
+  if(!currentUser)return;
+  const today=new Date().toLocaleDateString(),tl=alertLog.filter(a=>a.date===today);
+  document.getElementById('stP').textContent=patients.length;
+  document.getElementById('stT').textContent=tl.filter(a=>a.status==='taken').length;
+  document.getElementById('stM').textContent=tl.filter(a=>['missed','refused','absent'].includes(a.status)).length;
+  if(tgToken&&tgChatId)document.getElementById('tgBadge').innerHTML='<span class="tgb">✈️ Telegram active</span>';
+  const el=document.getElementById('patientList');
+  if(!patients.length){el.innerHTML=`<div class="empty"><span class="empty-ic">🏥</span><div style="font-size:14px;font-weight:700;margin-bottom:5px">No patients yet</div><div style="font-size:13px">Tap <strong>Add</strong> tab to register your first patient</div></div>`;return;}
+  el.innerHTML=patients.map(p=>{
+    const last=p.log?.slice(-1)[0];
+    const chip=!last?'<span class="chip ca">⏳ Pending</span>':last.status==='taken'?'<span class="chip cg">✓ Taken</span>':`<span class="chip cr">✗ ${last.status}</span>`;
+    const fa=p.face?`<img class="p-av" src="${p.face}">`:`<div class="p-avi">${ini(p.name)}</div>`;
+    const pills=p.meds.map(m=>`<div class="pbadge"><div class="pdot"></div>${m.name}<span style="color:var(--t3);font-weight:400"> ${m.time}</span></div>`).join('');
+    return`<div class="p-card">
+      <div class="p-top">${fa}<div class="p-inf">
+        <div class="p-nm">${p.name}${p.age?` <span style="font-size:11px;color:var(--t2);font-weight:400">· ${p.age}y</span>`:''}</div>
+        <div class="p-sub">${chip}<span style="color:var(--t3)">·</span>${p.cond?`<span>${p.cond}</span><span style="color:var(--t3)">·</span>`:''}<span>CT: ${p.ctName||'—'}</span></div>
+      </div></div>
+      <div class="p-pills">${pills}</div>
+      <div class="p-acts">
+        <button class="btn bg bsm" onclick="openScan(${p.id})">📷 Verify now</button>
+        <button class="btn bteal bsm" onclick="authGate('edit:${p.id}','Edit patient ${p.name}')">✏️ Edit</button>
+        <button class="btn bsm" style="color:var(--rd);border-color:var(--re)" onclick="triggerSOSFor(${p.id})">🚨 SOS</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════ PATIENTS LIST TAB ════
+function renderPatientsList(){
+  const el=document.getElementById('patientsFullList');
+  if(!patients.length){el.innerHTML=`<div class="empty"><span class="empty-ic">👥</span><div style="font-size:14px;font-weight:700;margin-bottom:5px">No patients registered</div><div style="font-size:13px">Tap "Add new" above to register your first patient</div></div>`;return;}
+  el.innerHTML=patients.map(p=>{
+    const fa=p.face?`<img style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--grl)" src="${p.face}">`:`<div class="p-avi" style="width:42px;height:42px;font-size:14px">${ini(p.name)}</div>`;
+    const medCount=p.meds?.length||0;
+    return`<div class="patients-list-item">
+      ${fa}
+      <div class="pli-info">
+        <div class="pli-name">${p.name}${p.age?` <span style="font-size:11px;color:var(--t2);font-weight:400">· ${p.age}y</span>`:''}</div>
+        <div class="pli-sub">${p.cond?p.cond+' · ':''}<span style="color:var(--gr);font-weight:600">💊 ${medCount} med${medCount!==1?'s':''}</span> · CT: ${p.ctName||'—'}</div>
+      </div>
+      <div class="pli-acts">
+        <button class="btn bg bsm" onclick="authGate('edit:${p.id}','Edit patient ${p.name}')">✏️ Edit</button>
+        <button class="btn br bsm" onclick="authGate('delete:${p.id}','Delete patient ${p.name}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════ EDIT PATIENT MODAL ════
+function openEditModal(pid){
+  const p=patients.find(x=>x.id===pid);if(!p)return;
+  editingPatientId=pid;
+  document.getElementById('editPatientName').textContent=p.name;
+  document.getElementById('editModal').classList.add('open');
+  const medInputs=p.meds.map((m,i)=>`
+    <div class="ms" id="ems_${i}">
+      <span style="font-size:14px;flex-shrink:0">💊</span>
+      <input type="text" value="${m.name}" placeholder="Medicine name" style="flex:1.5;margin:0;background:transparent;border:none;padding:4px 6px" id="emn_${i}">
+      <input type="time" value="${m.time}" style="flex:0 0 108px;margin:0;background:transparent;border:none;padding:4px 6px" id="emt_${i}">
+      <button class="mrm" onclick="document.getElementById('ems_${i}').remove()">×</button>
+    </div>`).join('');
+  let editMedCount=p.meds.length;
+  document.getElementById('editFormContent').innerHTML=`
+    <div class="row2" style="margin-bottom:0">
+      <div><label>Full name *</label><input type="text" id="eName" value="${p.name}"/></div>
+      <div><label>Age</label><input type="number" id="eAge" value="${p.age||''}" min="1" max="120"/></div>
+    </div>
+    <label>Condition</label><input type="text" id="eCond" value="${p.cond||''}" placeholder="Amnesia"/>
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:800;margin-bottom:11px;color:var(--t)">💊 Medication schedule</div>
+    <div id="editMedSlots">${medInputs}</div>
+    <button class="btn bsm" onclick="addEditMedSlot()" style="margin-bottom:14px">＋ Add medicine</button>
+    <div class="divider"></div>
+    <label>Caretaker name</label><input type="text" id="eCtName" value="${p.ctName||''}" placeholder="e.g. Priya Kumar"/>
+    <label>Caretaker Telegram Chat ID</label><input type="text" id="eCtTgId" value="${p.ctTgId||''}" placeholder="Leave blank to use Settings default"/>
+    <div class="divider"></div>
+    <label style="margin-bottom:8px">📸 Face photo</label>
+    <div class="fu" style="margin-bottom:14px">
+      <input type="file" accept="image/*" onchange="handleEditFace(event)"/>
+      <div id="editFacePrev">${p.face?`<img class="fp" src="${p.face}"><div style="font-size:11px;color:var(--t2);margin-top:6px">✓ Current photo (tap to change)</div>`:`<div style="font-size:28px;margin-bottom:4px">📷</div><div style="font-size:12px;color:var(--t2)">Tap to upload new photo</div>`}</div>
+    </div>
+    <div id="editMsg" style="display:none;padding:8px 12px;border-radius:var(--r6);font-size:13px;font-weight:600;margin-bottom:10px"></div>
+    <div class="brow">
+      <button class="btn bg" onclick="saveEdit()">✓ Save changes</button>
+      <button class="btn bgh" onclick="closeEdit()">Cancel</button>
+    </div>`;
+  // Store edit med count in window
+  window._editMedCount=p.meds.length;
+  window._editFaceSrc=p.face||null;
+}
+
+function addEditMedSlot(){
+  const id=window._editMedCount||0;window._editMedCount=(window._editMedCount||0)+1;
+  const d=document.createElement('div');d.className='ms';d.id=`ems_${id}`;
+  d.innerHTML=`<span style="font-size:14px;flex-shrink:0">💊</span><input type="text" placeholder="Medicine name" style="flex:1.5;margin:0;background:transparent;border:none;padding:4px 6px" id="emn_${id}"><input type="time" style="flex:0 0 108px;margin:0;background:transparent;border:none;padding:4px 6px" id="emt_${id}"><button class="mrm" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById('editMedSlots').appendChild(d);
+}
+
+function handleEditFace(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{window._editFaceSrc=ev.target.result;document.getElementById('editFacePrev').innerHTML=`<img class="fp" src="${ev.target.result}"><div style="font-size:11px;color:var(--t2);margin-top:6px;font-weight:600">✓ New photo uploaded</div>`;};r.readAsDataURL(f);}
+
+function saveEdit(){
+  const p=patients.find(x=>x.id===editingPatientId);if(!p)return;
+  const name=(document.getElementById('eName')?.value||'').trim();
+  if(!name){showEditMsg('Name is required',true);return;}
+  // Check for duplicate name (excluding current patient)
+  if(patients.find(x=>x.id!==editingPatientId&&x.name.toLowerCase()===name.toLowerCase())){showEditMsg('Another patient with this name already exists',true);return;}
+  // Collect meds from edit form
+  const meds=[];
+  document.querySelectorAll('#editMedSlots .ms').forEach(s=>{
+    const nameI=s.querySelector('input[type=text]')?.value.trim();
+    const timeI=s.querySelector('input[type=time]')?.value;
+    if(nameI&&timeI)meds.push({name:nameI,time:timeI});
+  });
+  if(!meds.length){showEditMsg('Add at least one medicine with a time',true);return;}
+  // Apply changes
+  p.name=name;
+  p.age=document.getElementById('eAge')?.value||'';
+  p.cond=document.getElementById('eCond')?.value||'';
+  p.ctName=document.getElementById('eCtName')?.value||'';
+  p.ctTgId=document.getElementById('eCtTgId')?.value||'';
+  p.meds=meds;
+  if(window._editFaceSrc!==undefined)p.face=window._editFaceSrc;
+  save();renderDash();renderPatientsList();
+  showEditMsg('✓ Changes saved!',false);
+  toast(`${name} updated`);
+  setTimeout(closeEdit,1200);
+}
+function showEditMsg(m,e){const el=document.getElementById('editMsg');if(!el)return;el.textContent=m;el.style.display='block';Object.assign(el.style,{background:e?'var(--rl)':'var(--mintl)',color:e?'var(--rd)':'var(--grd)'});setTimeout(()=>el.style.display='none',3000);}
+function closeEdit(){document.getElementById('editModal').classList.remove('open');editingPatientId=null;}
+document.getElementById('editModal').addEventListener('click',e=>{if(e.target.id==='editModal')closeEdit();});
+
+// ════ DELETE PATIENT (auth-gated) ════
+function doDeletePatient(id){
+  const p=patients.find(x=>x.id===id);
+  if(!p||!confirm(`Delete ${p.name}? This cannot be undone.`))return;
+  patients=patients.filter(x=>x.id!==id);save();renderDash();renderPatientsList();toast(`${p.name} removed`);
+}
+
+// ════ ADD PATIENT ════
+function initMedSlots(){document.getElementById('medSlots').innerHTML='';medSlotCount=0;addMedSlot();}
+function addMedSlot(){const id=medSlotCount++;const d=document.createElement('div');d.className='ms';d.innerHTML=`<span style="font-size:14px;flex-shrink:0">💊</span><input type="text" placeholder="Medicine name" style="flex:1.5" id="mn${id}"><input type="time" id="mt${id}"><button class="mrm" onclick="this.parentElement.remove()">×</button>`;document.getElementById('medSlots').appendChild(d);}
+function handleFace(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{faceSrc=ev.target.result;document.getElementById('facePrev').innerHTML=`<img class="fp" src="${faceSrc}"><div style="font-size:11px;color:var(--t2);margin-top:7px;font-weight:600">✓ Photo uploaded</div>`;};r.readAsDataURL(f);}
+function getMeds(){return Array.from(document.querySelectorAll('#medSlots .ms')).map(s=>({name:s.querySelector('input[type=text]')?.value.trim(),time:s.querySelector('input[type=time]')?.value})).filter(m=>m.name&&m.time);}
+function savePatient(){
+  const name=(document.getElementById('pName').value||'').trim(),age=(document.getElementById('pAge').value||'').trim(),cond=(document.getElementById('pCond').value||'').trim(),ctName=(document.getElementById('ctName').value||'').trim(),ctTgId=(document.getElementById('ctTgId').value||'').trim(),meds=getMeds();
+  if(!name)return fmsg('Enter patient full name',true);
+  if(!meds.length)return fmsg('Add at least one medicine with a scheduled time',true);
+  if(patients.find(p=>p.name.toLowerCase()===name.toLowerCase()))return fmsg('A patient with this name already exists in your account',true);
+  patients.push({id:Date.now(),name,age,cond,face:faceSrc,meds,ctName,ctTgId,log:[]});
+  save();fmsg('✓ Patient saved!',false);toast(`${name} registered`);
+  setTimeout(()=>{clearForm();sw('dash');},900);
+}
+function fmsg(m,e){const el=document.getElementById('formMsg');Object.assign(el.style,{display:'block',background:e?'var(--rl)':'var(--mintl)',color:e?'var(--rd)':'var(--grd)'});el.textContent=m;setTimeout(()=>el.style.display='none',3000);}
+function clearForm(){['pName','pAge','pCond','ctName','ctTgId'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});faceSrc=null;document.getElementById('facePrev').innerHTML=`<div style="font-size:36px;margin-bottom:5px">📷</div><div style="font-size:13px;font-weight:600;color:var(--t2)">Tap to upload face photo</div><div style="font-size:11px;color:var(--t3);margin-top:2px">Helps identify patient during verification</div>`;initMedSlots();}
+
+// ════ EMERGENCY ════
+function triggerSOS(){const mi=document.getElementById('modal-in');mi.innerHTML=`<div style="font-size:22px;margin-bottom:8px">🆘</div><div style="font-size:15px;font-weight:800;color:var(--rd);margin-bottom:5px">Emergency SOS</div><p style="font-size:13px;color:var(--t2);margin-bottom:14px">${patients.length?'Select patient to alert caretaker:':'No patients registered.'}</p>${patients.map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bor)"><div><div style="font-weight:700">${p.name}</div><div style="font-size:12px;color:var(--t2)">${p.ctName||'—'}</div></div><button class="btn br bsm" onclick="sendEmergSOS(${p.id})">🆘 SOS</button></div>`).join('')}<button class="btn bgh bsm" onclick="closeModal()" style="margin-top:12px;width:100%">Cancel</button>`;document.getElementById('modal').classList.add('open');}
+function triggerSOSFor(id){if(confirm('Send emergency SOS for this patient?'))sendEmergSOS(id);}
+function sendEmergSOS(id){const p=patients.find(x=>x.id===id);if(!p)return;const now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});sendTg(`🆘 <b>EMERGENCY SOS ALERT</b>\n\n<b>Patient:</b> ${p.name}\n<b>Time:</b> ${now}\n\nPlease contact ${p.name} or call emergency services IMMEDIATELY!\n\n<i>Smart Health App</i>`,p.ctTgId||tgChatId);sendPush('🆘 EMERGENCY!',`Emergency alert sent for ${p.name}!`,'sos');strongSpeak(`Emergency alert sent for ${p.name}! Caretaker notified via Telegram immediately!`);pushLog(p,'emergency',now,'—','SOS');toast(`🆘 SOS sent for ${p.name}`);closeModal();}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+
+// ════ ALERT LOG ════
+function pushLog(p,status,time,meds,method){if(!p.log)p.log=[];p.log.push({status,time});alertLog.unshift({patient:p.name,status,time,meds,ctName:p.ctName,method:method||'',date:new Date().toLocaleDateString()});if(alertLog.length>500)alertLog=alertLog.slice(0,500);save();}
+function renderAlerts(){
+  const el=document.getElementById('alertLog');
+  if(!alertLog.length){el.innerHTML=`<div class="empty"><span class="empty-ic">📋</span><div style="font-size:14px;font-weight:700;margin-bottom:5px">No events yet</div><div style="font-size:13px">Medication events will appear here</div></div>`;return;}
+  const cfg={taken:{ic:'✅',cl:'aig',lb:'Medication taken'},refused:{ic:'⚠️',cl:'air',lb:'Refused'},absent:{ic:'🔴',cl:'air',lb:'Not reachable'},missed:{ic:'❌',cl:'air',lb:'Missed dose'},emergency:{ic:'🆘',cl:'air',lb:'Emergency SOS'}};
+  const byDate={};alertLog.forEach(a=>{if(!byDate[a.date])byDate[a.date]=[];byDate[a.date].push(a);});
+  el.innerHTML=Object.entries(byDate).map(([date,items])=>`<div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px">${date}</div>${items.map(a=>{const c=cfg[a.status]||{ic:'•',cl:'aia',lb:a.status};return`<div class="al-card"><div class="al-ic ${c.cl}">${c.ic}</div><div class="al-bd"><strong>${a.patient}</strong> — ${c.lb}<p>${a.meds}</p><div class="al-meta"><span>${a.time}</span>${a.ctName?`<span>·</span><span>${a.ctName}</span>`:''}<span class="al-mth">${a.method}</span></div></div></div>`;}).join('')}`).join('');
+}
+function clearAlerts(){if(!alertLog.length)return;if(!confirm('Clear all event history?'))return;alertLog=[];save();renderAlerts();}
+
+// ════ VOICE ════
+function strongSpeak(msg){
+  if(!('speechSynthesis'in window))return;window.speechSynthesis.cancel();
+  const say=()=>{const u=new SpeechSynthesisUtterance(msg);u.rate=0.80;u.pitch=1.05;u.volume=1;const voices=window.speechSynthesis.getVoices();const best=voices.find(v=>/natural|enhanced|premium/i.test(v.name)&&/en/i.test(v.lang))||voices.find(v=>/en/i.test(v.lang));if(best)u.voice=best;return u;};
+  window.speechSynthesis.speak(say());setTimeout(()=>{if(!window.speechSynthesis.speaking)window.speechSynthesis.speak(say());},4500);
+  const vt=document.getElementById('vText');if(vt)vt.textContent=msg;
+}
+
+// ════ UTILS ════
+function ini(n){return(n||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+let toastT;
+function toast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
+
+// ════ INIT ════
+function initApp(){
+  initMedSlots();renderDash();
+  if(localStorage.getItem('sha_push')==='1'&&Notification.permission==='granted'){pushOn=true;document.getElementById('pushBtn').classList.add('on');}
+  if('speechSynthesis'in window){window.speechSynthesis.getVoices();window.speechSynthesis.addEventListener?.('voiceschanged',()=>window.speechSynthesis.getVoices());}
+}
+document.getElementById('lPass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lBtn').click();});
+document.getElementById('lUser').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('lPass').focus();});
+</script>
+</body>
+</html>
